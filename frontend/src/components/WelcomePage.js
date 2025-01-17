@@ -8,7 +8,7 @@ function Welcome() {
         <div className="welcome-container">
             <h1>Welcome to the ICS File Filter Tool</h1>
             <p>Effortlessly Filter and Download Your Calendar Events.</p>
-            <p>You can use for example: https://sked.lin.hs-osnabrueck.de/sked/jg/22SPS.ics</p>
+            <p>You can use for example: {process.env.REACT_APP_CALENDAR_URL}example.ics</p>
             <Link className="get-started-btn" to="/filter">Get Started</Link>
             <br/>
             <br/>
