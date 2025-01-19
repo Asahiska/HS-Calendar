@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 
 import { Button } from '@/components/ui/button'; // Assuming shadcn-ui is the library for components
 import { Card } from '@/components/ui/card';
-import Calender from "@/components/Calender.tsx"; // Importing Card component for better layout
 
 function Welcome() {
     var EXAMPLE_URL = import.meta.env.VITE_EXAMPLE_URL;

@@ -1,8 +1,13 @@
-import {useEffect, useState} from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {useState} from 'react';
 import LoadEvents from "@/components/FilterComponents/LoadEvents.tsx";
 import MyCalendar from "@/components/FilterComponents/Calendar.tsx";
 
+export type CalendarEvent = {
+    title: string;
+    start: Date;
+    end: Date;
+    allDay: boolean;
+};
 
 const EventFilterPage = () => {
     const [icsLink, setIcsLink] = useState<string>('');
@@ -10,20 +15,20 @@ const EventFilterPage = () => {
     const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
     const [filterLink, setFilterLink] = useState<string>('');
 
-    const [calendarEvents, setCalendarEvents] = useState([]);
+    const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
     const all_states = {
         icsLink, setIcsLink,
         events, setEvents,
         selectedEvents, setSelectedEvents,
         filterLink, setFilterLink,
-        calendarEvents, setCalendarEvents
+        setCalendarEvents
     }
 
     return (
         <div className="flex m-0 p-0 flex-col items-center justify-center bg-gray-100 w-screen min-h-screen">
             <LoadEvents states = {all_states}/>
-            <MyCalendar states = {all_states}></MyCalendar>
+            <MyCalendar calendarEvents = {calendarEvents}></MyCalendar>
         </div>
     );
 };

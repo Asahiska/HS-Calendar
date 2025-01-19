@@ -10,13 +10,9 @@ import axios from "axios";
 import ical from "ical.js";
 import {useEffect, useState} from "react";
 import {compressUrlParam} from "@/components/Functions/urlBuilder.tsx";
+import {CalendarEvent} from "@/components/EventFilterPage.tsx";
 
 const ICS_SERVICE = import.meta.env.VITE_ICS_SERVICE_URL
-
-interface eventFilter  {
-    name: string,
-    course: string,
-}
 
 export default function LoadEvents (states:any) {
 
@@ -25,18 +21,18 @@ export default function LoadEvents (states:any) {
         events, setEvents,
         selectedEvents, setSelectedEvents,
         filterLink, setFilterLink,
-        calendarEvents, setCalendarEvents
+        setCalendarEvents
     } = states.states
 
 
 
     const [isCopied, setIsCopied] = useState<boolean>(false);
-    const [calendarRawEvents, setCalendarRawEvents] = useState([]);
+    const [calendarRawEvents, setCalendarRawEvents] = useState<CalendarEvent[]>([]);
 
 
     const handleLoadICS = async () => {
         try {
-            const proxyURL = `${ICS_SERVICE}filtered-calendar.ics/?icsUrl=${icsLink}`;
+            const proxyURL = `${ICS_SERVICE}filtered-calendar.ics/?icsUrl=${await compressUrlParam(icsLink)}`;
             const response = await axios.get(proxyURL);
             const icsData = response.data;
 
@@ -46,10 +42,12 @@ export default function LoadEvents (states:any) {
 
             const calendarEvents = events.map(event => {
                 const summary:string = event.getFirstPropertyValue('summary') as string;
-                const start = new Date(event.getFirstPropertyValue('dtstart'));
-                const end = new Date(event.getFirstPropertyValue('dtend'));
+                const startValue = event.getFirstPropertyValue('dtstart');
+                const start: Date = startValue ? new Date(startValue.toString()) : new Date();
+                const endValue = event.getFirstPropertyValue('dtend')
+                const end:Date=  endValue ? new Date(endValue.toString()) : new Date();
                 const isAllDay = false;
-                const description:string = event.getFirstPropertyValue('description'); // Extrahiere die DESCRIPTION
+                const description:string = event.getFirstPropertyValue('description') as string; // Extrahiere die DESCRIPTION
 
                 // Extrahiere die Studiengruppe aus der DESCRIPTION
                 const studyGroupMatch = description.match(/Studiengruppe:\s*([^\n]+)/);
@@ -83,18 +81,19 @@ export default function LoadEvents (states:any) {
 
 
     const handleCheckboxChange = (eventName: string) => {
-        setSelectedEvents(prev =>
+        setSelectedEvents((prev: string[]) =>
             prev.includes(eventName)
-                ? prev.filter(e => e !== eventName)
+                ? prev.filter((e) => e !== eventName)
                 : [...prev, eventName]
         );
+
 
     };
 
     useEffect(() => {
         console.log(selectedEvents); // Hier wird der aktualisierte Wert angezeigt
 
-        const filteredEvents = calendarRawEvents.filter(event => selectedEvents.includes(event.title));
+        const filteredEvents:CalendarEvent[] = calendarRawEvents.filter(event => selectedEvents.includes(event.title));
         setCalendarEvents(filteredEvents);
 
         console.log(filteredEvents); // Hier wird die gefilterte Liste der Ereignisse angezeigt
@@ -103,7 +102,11 @@ export default function LoadEvents (states:any) {
 // Gzip-Komprimierung und Linkgenerierung
     const handleGenerateFilterLink = async () => {
         // Erstelle JSON-Payload
-        const jsonPayload = JSON.stringify({ events: selectedEvents });
+        // Ermitteln der nicht ausgewählten Events
+        const unselectedEvents = events.filter(
+            event => !selectedEvents.some(selected => selected === event)
+        );
+        const jsonPayload = JSON.stringify({ events: unselectedEvents });
 
         // Komprimieren des JSON-Payloads
         const compressedPayload = await compressUrlParam(jsonPayload, 'gzip');
@@ -153,7 +156,7 @@ export default function LoadEvents (states:any) {
                         <h2 className="text-lg font-semibold mb-2">Select Events to Keep</h2>
                         <ScrollArea className="h-[350px] w-full border rounded-md p-4">
                             <ul className="space-y-2">
-                                {events.map((eventName, index) => (
+                                {events.map((eventName: string, index: number) => (
                                     <li key={index} className="flex items-center space-x-2">
                                         <Checkbox
                                             id={`event-${index}`}
