@@ -1,9 +1,0 @@
-
-services:
-  open-web-calendar:
-    image: niccokunzmann/open-web-calendar
-    ports:
-      - '80:80'
-    environment:
-      - ALLOWED_HOSTS=*
-    restart: unless-stopped
