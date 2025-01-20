@@ -1,24 +1,110 @@
-# Filter SemPlan
+<div align="center">
 
-This repository allows ics files to be filtered. Only the original link of the ICS file is required.
-The tool was created for the HS Osnabrück as there is no official tool available
+# HsOsnabrueckFilterICS
 
-# Usage
+Filter ICS files effectively with ease!
 
-The frontend is accessible via https://fwallmeier.github.io/HsOsnabrueckFilterICS/ 
+[![GitHub last commit](https://img.shields.io/github/last-commit/fwallmeier/HsOsnabrueckFilterICS)](https://github.com/fwallmeier/HsOsnabrueckFilterICS/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues-raw/fwallmeier/HsOsnabrueckFilterICS)](https://github.com/fwallmeier/HsOsnabrueckFilterICS/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/fwallmeier/HsOsnabrueckFilterICS)](https://github.com/fwallmeier/HsOsnabrueckFilterICS/pulls)
 
-It guides you through the creation of a special URL that contains all the information required for filtering in its parameters
-You can also view the current filter. Open-Web-Calender is used for this
+[Usage](#usage)  • [Run Locally](#run-the-project-locally) • [Development](#development) • [Contributing](#contributing) • [License](#license)
 
-The Filtering of the ICS file takes Place a simple node.js server. 
+</div>
 
-The Node-Js server is provided as a container in the Google Cloud.
+## Features
 
-# Run the Project Locally
+- 📅 Filters ICS files by user-defined criteria
+- 🌐 Simple, intuitive web interface for configuration
+- 📱 Fully responsive design for mobile and desktop
+- 🚀 Hosted on Google Cloud for seamless deployment
 
-in the folders frontend and NodeServer run "npm install". Afterward you can run "npm start" to Start the front end component and 
-"docker build -t nodeJSServer ." to build the dockercontainer
+## Usage
 
-(The url of the used docker container needs to be stored in the frontend)
+Access the tool at [https://fwallmeier.github.io/HsOsnabrueckFilterICS/](https://fwallmeier.github.io/HsOsnabrueckFilterICS/).
+
+### Steps to Filter ICS Files
+
+1. Provide the original link to the ICS file.
+2. Use the guided interface to configure the desired filtering options.
+3. Generate a unique URL containing all filter parameters.
+4. View and share the filtered calendar
+
+The filtering is powered by a Node.js server hosted as a container on Google Cloud.
 
 
+## Run the Project Locally
+
+To set up and run the project locally, follow these steps:
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v14 or higher)
+- [npm](https://www.npmjs.com/) (v6 or higher)
+- [Docker](https://www.docker.com/)
+
+### Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/fwallmeier/HsOsnabrueckFilterICS.git
+   ```
+
+2. Install dependencies:
+    - Navigate to the `CalenderFrontend` folder and run:
+      ```bash
+      npm install
+      ```
+    - Navigate to the `CalenderBackend` folder and run:
+      ```bash
+      npm install
+      ```
+
+3. Start the frontend:
+   ```bash
+   npm run dev
+   ```
+
+4. Build and run the Docker container for the Node.js server:
+   ```bash
+   docker build -t calender-backend .
+   ```
+
+   Ensure the URL of the Node.js server is properly configured in the frontend settings.
+   (.env File)
+
+5. Access the application in your browser at `http://localhost:8080/` (or the configured port).
+
+## Development
+
+This project is open for contributions and improvements. Developers can:
+
+- Fork the repository
+- Submit bug fixes or enhancements via pull requests
+- Add new features as per the [issues list](https://github.com/fwallmeier/HsOsnabrueckFilterICS/issues)
+
+### Commit Guidelines
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) format. Examples:
+
+- `feat: Add filtering by event type`
+- `fix: Resolve timezone handling issues`
+- `docs: Update README with deployment instructions`
+
+## Contributing
+
+Contributions are welcome! Follow these steps to get started:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/your-feature-name`).
+3. Commit your changes (`git commit -am 'Add your feature'`).
+4. Push to the branch (`git push origin feature/your-feature-name`).
+5. Open a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+<div align="center">
+  <strong>Filter SemPlan</strong> - Simplifying calendar filtering for everyone
+</div>

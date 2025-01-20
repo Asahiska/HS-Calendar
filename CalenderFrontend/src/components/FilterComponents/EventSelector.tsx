@@ -5,7 +5,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import {Search} from "lucide-react";
-import {Label} from "@radix-ui/react-label";
 
 export default function EventSelector({ events, selectedEvents, setSelectedEvents }) {
     const [searchQuery, setSearchQuery] = useState("")

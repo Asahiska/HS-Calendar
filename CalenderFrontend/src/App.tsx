@@ -3,6 +3,7 @@ import WelcomePage from '@/components/WelcomePage'; // Assuming you have a Welco
 import EventFilterPage from '@/components/EventFilterPage';
 import './App.css';
 import { Toaster } from './components/ui/toaster';
+import Footer from "@/components/webBasics/Footer.tsx";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/filter" element={<EventFilterPage />} />
           <Route path="/*" element={<WelcomePage/>} />
         </Routes>
+          <Footer></Footer>
       </Router>
       <Toaster />
     </>
