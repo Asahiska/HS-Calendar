@@ -11,6 +11,8 @@ import ical from "ical.js";
 import {useEffect, useState} from "react";
 import {compressUrlParam} from "@/components/Functions/urlBuilder.tsx";
 import {CalendarEvent} from "@/components/EventFilterPage.tsx";
+import EventSelector from "@/components/FilterComponents/EventSelector.tsx";
+import {ICSLinkPopup} from "@/components/FilterComponents/LinkPopup.tsx";
 
 const ICS_SERVICE = import.meta.env.VITE_ICS_SERVICE_URL
 
@@ -28,7 +30,7 @@ export default function LoadEvents (states:any) {
 
     const [isCopied, setIsCopied] = useState<boolean>(false);
     const [calendarRawEvents, setCalendarRawEvents] = useState<CalendarEvent[]>([]);
-
+    const [isPopupOpen, setIsPopupOpen] = useState(false)
 
     const handleLoadICS = async () => {
         try {
@@ -79,17 +81,6 @@ export default function LoadEvents (states:any) {
         }
     };
 
-
-    const handleCheckboxChange = (eventName: string) => {
-        setSelectedEvents((prev: string[]) =>
-            prev.includes(eventName)
-                ? prev.filter((e) => e !== eventName)
-                : [...prev, eventName]
-        );
-
-
-    };
-
     useEffect(() => {
         console.log(selectedEvents); // Hier wird der aktualisierte Wert angezeigt
 
@@ -121,6 +112,7 @@ export default function LoadEvents (states:any) {
 
         // Setze den Filter-Link im Zustand
         setFilterLink(newFilterLink);
+        setIsPopupOpen(true)
     };
 
     const handleCopy = () => {
@@ -154,50 +146,18 @@ export default function LoadEvents (states:any) {
 
                     <div>
                         <h2 className="text-lg font-semibold mb-2">Select Events to Keep</h2>
-                        <ScrollArea className="h-[350px] w-full border rounded-md p-4">
-                            <ul className="space-y-2">
-                                {events.map((eventName: string, index: number) => (
-                                    <li key={index} className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id={`event-${index}`}
-                                            checked={selectedEvents.includes(eventName)}
-                                            onCheckedChange={() => handleCheckboxChange(eventName)}
-                                        />
-                                        <label
-                                            htmlFor={`event-${index}`}
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            {eventName}
-                                        </label>
-                                    </li>
-                                ))}
-                            </ul>
-                        </ScrollArea>
+                        <EventSelector
+                            events={events}
+                            selectedEvents={selectedEvents}
+                            setSelectedEvents={setSelectedEvents}
+                        />
                     </div>
 
-                    <Button onClick={handleGenerateFilterLink} className="w-full max-w-64">
+                    <Button onClick={handleGenerateFilterLink} className="w-full max-w-56 flex">
                         Generate Filter Link
                     </Button>
 
-                    {filterLink && (
-                        <Alert>
-                            <CalendarIcon className="h-4 w-4" />
-                            <AlertTitle>Filtered ICS Link</AlertTitle>
-                            <AlertDescription>
-                                <div className="flex items-center space-x-2">
-                                    <a className="text-blue-500 hover:underline" href={filterLink} target="_blank" rel="noopener noreferrer">
-                                        Link To ICS-File
-                                    </a>
-                                    <Button variant="outline" size="sm" onClick={handleCopy}>
-                                        {isCopied ? "Copied!" : <Copy className="h-4 w-4" />}
-                                    </Button>
-                                </div>
-                                <p className="mt-2 text-sm text-gray-500">
-                                    You can use the Link above to insert the ICS file into your Calendar
-                                </p>
-                            </AlertDescription>
-                        </Alert>
-                    )}
+                    <ICSLinkPopup filterLink={filterLink} isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} />
                 </div>
             </CardContent>
         </Card>
