@@ -11,7 +11,7 @@ export type CalendarEvent = {
 };
 
 const EventFilterPage = () => {
-    const [icsLink, setIcsLink] = useState<string>('');
+    const [icsLink, setIcsLink] = useState<string>(import.meta.env.VITE_EXAMPLE_URL);
     const [events, setEvents] = useState<string[]>([]);
     const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
     const [filterLink, setFilterLink] = useState<string>('');

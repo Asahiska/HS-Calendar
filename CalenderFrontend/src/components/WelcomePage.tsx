@@ -7,7 +7,7 @@ function Welcome() {
     var EXAMPLE_URL = import.meta.env.VITE_EXAMPLE_URL;
     return (
         <div className="flex m-0 p-0 flex-col items-center justify-center bg-gray-100 w-screen min-h-screen">
-            <Card className="p-6 shadow-lg rounded-lg w-1/2">
+            <Card className="p-6 shadow-lg rounded-lg m-6 w-full lg:w-3/4">
                 <h1 className="text-3xl font-bold text-center text-blue-600">Welcome to the ICS File Filter Tool</h1>
                 <p className="mt-4 text-lg text-center text-gray-700">Effortlessly Filter and Download Your Calendar Events.</p>
                 <p className="mt-2 text-md text-center text-gray-500 mb-1">You can use for example: <a href={EXAMPLE_URL} className="text-blue-500 underline">{EXAMPLE_URL}</a></p>
