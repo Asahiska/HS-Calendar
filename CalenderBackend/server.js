@@ -113,7 +113,7 @@ app.get('/filtered-calendar.ics', async (req, res) => {
                 const title = studyGroup ? `${summary} (${studyGroup})` : summary;
 
 
-                return !filterData['events'].includes(title);
+                return filterData['events'].includes(title);
             }) 
             : events; // If filterData is empty, return all events
 

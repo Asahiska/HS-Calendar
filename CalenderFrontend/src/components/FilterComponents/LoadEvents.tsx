@@ -106,7 +106,7 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
         // Erstelle JSON-Payload
         // Ermitteln der nicht ausgewählten Events
         const unselectedEvents = events.filter(
-            (event:any) => !selectedEvents.some((selected:any) => selected === event)
+            (event:any) => selectedEvents.some((selected:any) => selected === event)
         );
         const jsonPayload = JSON.stringify({ events: unselectedEvents });
 
