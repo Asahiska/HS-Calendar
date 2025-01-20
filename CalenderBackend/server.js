@@ -131,7 +131,7 @@ app.get('/filtered-calendar.ics', async (req, res) => {
 
     } catch (error) {
         console.error('Error processing ICS file:', error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).send('Can not load ICS-File. Invalid filter or base URL');
     }
 });
 

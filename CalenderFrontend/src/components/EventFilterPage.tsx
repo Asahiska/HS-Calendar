@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import LoadEvents from "@/components/FilterComponents/LoadEvents.tsx";
 import MyCalendar from "@/components/FilterComponents/Calendar.tsx";
+import { useToast } from "@/hooks/use-toast";
 
 export type CalendarEvent = {
     title: string;
@@ -15,7 +16,10 @@ const EventFilterPage = () => {
     const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
     const [filterLink, setFilterLink] = useState<string>('');
 
+
     const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+
+    const { toast } = useToast()
 
     const all_states = {
         icsLink, setIcsLink,
@@ -27,8 +31,8 @@ const EventFilterPage = () => {
 
     return (
         <div className="flex m-0 p-0 flex-col items-center justify-center bg-gray-100 w-screen min-h-screen">
-            <LoadEvents states = {all_states}/>
-            <MyCalendar calendarEvents = {calendarEvents}></MyCalendar>
+            <LoadEvents states = {all_states}  toast={toast}/>
+            <MyCalendar calendarEvents = {calendarEvents} selectedEvents = { selectedEvents } ></MyCalendar>
         </div>
     );
 };

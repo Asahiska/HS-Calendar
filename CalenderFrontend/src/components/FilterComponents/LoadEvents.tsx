@@ -2,10 +2,6 @@ import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
-import {ScrollArea} from "@/components/ui/scroll-area.tsx";
-import {Checkbox} from "@/components/ui/checkbox.tsx";
-import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert.tsx";
-import {CalendarIcon, Copy} from "lucide-react";
 import axios from "axios";
 import ical from "ical.js";
 import {useEffect, useState} from "react";
@@ -16,7 +12,7 @@ import {ICSLinkPopup} from "@/components/FilterComponents/LinkPopup.tsx";
 
 const ICS_SERVICE = import.meta.env.VITE_ICS_SERVICE_URL
 
-export default function LoadEvents (states:any) {
+export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
 
     const {
         icsLink, setIcsLink,
@@ -24,11 +20,10 @@ export default function LoadEvents (states:any) {
         selectedEvents, setSelectedEvents,
         filterLink, setFilterLink,
         setCalendarEvents
-    } = states.states
+    } = states
 
 
 
-    const [isCopied, setIsCopied] = useState<boolean>(false);
     const [calendarRawEvents, setCalendarRawEvents] = useState<CalendarEvent[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState(false)
 
@@ -76,8 +71,24 @@ export default function LoadEvents (states:any) {
             // Update the state with the sorted event names
             setEvents(eventNames);
 
-        } catch (error) {
+        } catch (error:any) {
             console.error('Error fetching ICS file:', error);
+            if (error.isAxiosError && error.response) {
+                const { status, data } = error.response;
+                const errorMessage = `Server Error ${status}: ${data?.message || JSON.stringify(data)}`;
+                toast({
+                    variant: "destructive",
+                    title: "Error fetching ICS file",
+                    description: `${errorMessage}`,
+                  })
+            }else{
+                toast({
+                    variant: "destructive",
+                    title: "Error fetching ICS file",
+                    description: `ERROR: ${error.message}`,
+                  })
+            }
+            
         }
     };
 
@@ -115,18 +126,8 @@ export default function LoadEvents (states:any) {
         setIsPopupOpen(true)
     };
 
-    const handleCopy = () => {
-        navigator.clipboard
-            .writeText(filterLink)
-            .then(() => {
-                setIsCopied(true);
-                setTimeout(() => setIsCopied(false), 2000);
-            })
-            .catch((err) => console.error("Error copying:", err));
-    };
-
     return(
-        <Card className="p-6 shadow-lg rounded-lg m-6 w-3/4">
+        <Card className="p-6 shadow-lg rounded-lg m-6 w-full lg:w-3/4">
             <CardHeader>
                 <CardTitle>Filter ICS Events</CardTitle>
             </CardHeader>
