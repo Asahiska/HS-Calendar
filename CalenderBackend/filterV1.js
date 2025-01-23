@@ -4,8 +4,8 @@ import crypto from "crypto";
 import {decompress} from "./functions.js";
 
 const cache = {}; // Cache für ICS-Daten
-//const CACHE_DURATION = 10 * 60 * 1000; // Cache-Dauer in Millisekunden (5 Minuten)
-const CACHE_DURATION = 10*1000
+const CACHE_DURATION = 10 * 60 * 1000; // Cache-Dauer in Millisekunden (10 Minuten)
+
 
 export async function filterICSV1( req, res){
     let { icsUrl, filter, version } = req.query;
