@@ -171,7 +171,6 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
                             events={events}
                             selectedEvents={selectedEvents}
                             setSelectedEvents={setSelectedEvents}
-                            toast={toast}
                         />
                     </div>
                     <div className={"flex"}>
