@@ -8,12 +8,12 @@ const CACHE_DURATION = 10 * 60 * 1000; // Cache-Dauer in Millisekunden (10 Minut
 
 
 export async function filterICSV1( req, res){
-    let { icsUrl, filter, version } = req.query;
+    let { icsUrl, filter } = req.query;
 
     icsUrl = await decompress(icsUrl)
     filter = await decompress(filter)
 
-    console.log("ICS-URL: ", icsUrl, " Filter: ", filter)
+    console.log("ICS-URL: ", icsUrl, " Filter: ", filter, " API_Version: 1")
 
     if(icsUrl === undefined){
         console.error('Invalid Args');
@@ -30,6 +30,7 @@ export async function filterICSV1( req, res){
         // Überprüfen, ob die Datei gecacht ist und ob seit dem letzten Laden mehr als CACHE_DURATION Zeit vergangen ist
         if (!cache[cacheKey] || (currentTime - cache[cacheKey].lastDownload >= CACHE_DURATION)) {
             // ICS-Datei vom angegebenen URL herunterladen
+            console.log("Downloading new File")
             const response = await axios.get(icsUrl);
             const icsData = response.data;
 
@@ -45,7 +46,7 @@ export async function filterICSV1( req, res){
                 timestamp: currentTime // Wird für die Gültigkeitsprüfung verwendet
             };
         } else {
-            console.log('Using cached file data without re-downloading cache Valid for: ', (CACHE_DURATION - (currentTime - cache[cacheKey].lastDownload))/1000, "s");
+            //console.log('Using cached file data without re-downloading cache Valid for: ', (CACHE_DURATION - (currentTime - cache[cacheKey].lastDownload))/1000, "s");
         }
 
         const icsData = cache[cacheKey].icsData;
@@ -80,10 +81,6 @@ export async function filterICSV1( req, res){
         const newComp = new ical.Component(['vcalendar', [], []]);
         filteredEvents.forEach(event => newComp.addSubcomponent(event));
         const newICSData = newComp.toString();
-
-        // Daten im Cache aktualisieren
-        cache[cacheKey].icsData = newICSData;
-        cache[cacheKey].timestamp = currentTime;
 
         // Setzt den Content-Type auf text/calendar, um die Datei als ICS-Datei bereitzustellen
         res.setHeader('Content-Type', 'text/calendar; charset=utf-8');

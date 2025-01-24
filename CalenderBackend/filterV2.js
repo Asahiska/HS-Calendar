@@ -6,7 +6,7 @@ import crypto from "crypto";
 import { decompress } from "./functions.js";
 
 const cache = {}; // Cache für ICS-Daten
-const CACHE_DURATION = 20 * 1000; // 24 Stunden
+const CACHE_DURATION = 10* 60 * 1000; // 24 Stunden
 const STORAGE_PATH = "./data"; // Pfad zum Speichern der ICS-Datei (Docker-Volume)
 
 export async function filterICSV2(req, res) {
@@ -15,7 +15,7 @@ export async function filterICSV2(req, res) {
     icsUrl = await decompress(icsUrl);
     filter = await decompress(filter);
 
-    console.log("ICS-URL: ", icsUrl, " Filter: ", filter);
+    console.log("ICS-URL: ", icsUrl, " Filter: ", filter, "API_Version: 2");
 
     if (!icsUrl) {
         console.error("Invalid Args");
@@ -31,23 +31,32 @@ export async function filterICSV2(req, res) {
 
     try {
         // Überprüfen, ob die gespeicherte Datei existiert und aktuell ist
-        if (fs.existsSync(filepath)) {
-            const fileStats = fs.statSync(filepath);
-            const fileAge = currentTime - fileStats.mtimeMs;
+        if (filename in cache) {
+            const fileAge = currentTime - cache[filename].lastDownload;
 
             if (fileAge < CACHE_DURATION) {
-                console.log("Using stored ICS file.");
-                icsData = fs.readFileSync(filepath, "utf-8");
+                icsData = cache[filename].icsData
             } else {
                 console.log("Stored ICS file is outdated. Downloading new file...");
                 icsData = await downloadAndUpdateICS(icsUrl, filepath);
+                cache[filename] = {
+                    icsData: icsData,
+                    lastDownload: currentTime
+                };
             }
         } else {
             console.log("No stored ICS file found. Downloading new file...");
             icsData = await downloadAndUpdateICS(icsUrl, filepath);
+            cache[filename] = {
+                icsData: icsData,
+                lastDownload: currentTime
+            };
         }
+        //console.log("ROW ICS DATA")
+        //console.log(icsData)
 
         // ICS-Daten parsen und filtern
+        // Parse the ICS data and extract events
         const jcalData = ical.parse(icsData);
         const comp = new ical.Component(jcalData);
         const events = comp.getAllSubcomponents("vevent");
@@ -57,7 +66,20 @@ export async function filterICSV2(req, res) {
             filterData = JSON.parse(decodeURIComponent(filter));
         }
 
-        let counter = 1;
+        // Create a map to count occurrences of each summary
+        const eventCountMap = new Map();
+
+        // First pass: Count occurrences of each summary
+        events.forEach(event => {
+            const summary = event.getFirstPropertyValue("summary");
+            eventCountMap.set(summary, (eventCountMap.get(summary) || 0) + 1);
+        });
+        //console.log(eventCountMap)
+
+        // Create a map to track the index of each event
+        const eventIndexMap = new Map();
+
+        // Filter events and update their summaries
         const filteredEvents = events.filter(event => {
             const summary = event.getFirstPropertyValue("summary");
             const description = event.getFirstPropertyValue("description") || "";
@@ -67,13 +89,21 @@ export async function filterICSV2(req, res) {
             const title = studyGroup ? `${summary} (${studyGroup})` : summary;
 
             if (filterData["events"]?.includes(title)) {
-                const newDescription = `${description}\nCounter: ${counter}`;
-                event.updatePropertyWithValue("description", newDescription);
-                counter++;
+                // Get the total count of events with the same summary
+                const totalCount = eventCountMap.get(summary);
+                // Get the current index for this event
+                const currentIndex = (eventIndexMap.get(summary) || 0) + 1;
+                eventIndexMap.set(summary, currentIndex);
+
+                // Update the summary with the current index and total count
+                const newSummary = `${summary} (${currentIndex}/${totalCount})`;
+                event.updatePropertyWithValue("summary", newSummary);
                 return true;
             }
-            return !filterData["events"]; // Wenn kein Filter vorhanden, alle Events einschließen
+            return !filterData["events"]; // If no filter is present, include all events
         });
+        //console.log("FILTERED_DATA")
+        //console.log(filteredEvents)
 
         const newComp = new ical.Component(["vcalendar", [], []]);
         filteredEvents.forEach(event => newComp.addSubcomponent(event));
@@ -96,7 +126,6 @@ async function downloadAndUpdateICS(icsUrl, filepath) {
         if (response.status !== 200) {
             throw new Error(`Failed to download ICS file. HTTP status: ${response.status}`);
         }
-        console.log("TRY LOAD ICS FROM STORAGE")
         const newICSData = response.data;
         if (fs.existsSync(filepath)) {
             const oldICSData = fs.readFileSync(filepath, "utf-8");
@@ -117,31 +146,30 @@ function mergeICSFiles(oldICSData, newICSData) {
     const oldComp = new ical.Component(ical.parse(oldICSData));
     const newComp = new ical.Component(ical.parse(newICSData));
 
-    console.log("merge ICS FIles")
     const oldEvents = oldComp.getAllSubcomponents("vevent");
     const newEvents = newComp.getAllSubcomponents("vevent");
 
     const mergedComp = new ical.Component(["vcalendar", [], []]);
 
-    // Füge alle neuen Events hinzu
-    newEvents.forEach(event => mergedComp.addSubcomponent(event));
+    // Das älteste Datum ist das erste Element in newEvents
+    const dtStart = newEvents[0].getFirstPropertyValue("dtstart");
+    const oldestDate = dtStart ? new Date(dtStart.toString()) : new Date();
 
-    // Finde das jüngste Datum in den neuen Events
-    const newestDate = newEvents.reduce((latest, event) => {
-        const dtStart = event.getFirstPropertyValue("");
-        const eventDate = dtStart && new Date(dtStart.toString());
-        return eventDate > latest ? eventDate : latest;
-    }, new Date(0)); // Start mit der ältesten Zeit
 
     // Füge alte Events hinzu, die vor dem jüngsten Datum liegen
-    oldEvents.forEach(event => {
+    for (const event of oldEvents) {
         const dtStart = event.getFirstPropertyValue("dtstart");
-        const eventDate = dtStart && new Date(dtStart.toString());
+        const eventDate = dtStart ? new Date(dtStart.toString()) : new Date();
 
-        if (eventDate < newestDate) {
+        if (eventDate < oldestDate) {
             mergedComp.addSubcomponent(event);
+        } else {
+            break; // Stoppe die Schleife, wenn das erste Event gefunden wurde, das nicht passt
         }
-    });
+    }
+
+    // Füge alle neuen Events hinzu
+    newEvents.forEach(event => mergedComp.addSubcomponent(event));
 
     return mergedComp.toString();
 }

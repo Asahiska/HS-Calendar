@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import {Search} from "lucide-react";
+import { Button } from "../ui/button"
 
 export default function EventSelector({ events, selectedEvents, setSelectedEvents }) {
     const [searchQuery, setSearchQuery] = useState("")
@@ -20,7 +21,7 @@ export default function EventSelector({ events, selectedEvents, setSelectedEvent
     return (
         <div className="space-y-4">
 
-            <div className="relative max-w-56">
+            <div className="relative flex">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                     id="search"
@@ -28,8 +29,9 @@ export default function EventSelector({ events, selectedEvents, setSelectedEvent
                     placeholder="Suche nach Events..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
+                    className="pl-8  max-w-56"
                 />
+                <Button className="ml-3" variant="outline" onClick={() => {setSearchQuery(""); setSelectedEvents([])}}>Clear Filter</Button>
             </div>
             <ScrollArea className="h-[350px] w-full border rounded-md p-4">
                 <ul className="space-y-2">
@@ -42,7 +44,7 @@ export default function EventSelector({ events, selectedEvents, setSelectedEvent
                             />
                             <label
                                 htmlFor={`event-${index}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-left"
                             >
                                 {eventName}
                             </label>
