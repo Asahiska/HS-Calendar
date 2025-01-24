@@ -27,6 +27,29 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
     const [calendarRawEvents, setCalendarRawEvents] = useState<CalendarEvent[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState(false)
 
+
+    // Load saved events from localStorage on initial render
+    useEffect(() => {
+        const savedEvents = localStorage.getItem("selectedEvents");
+        if (savedEvents) {
+            handleLoadICS().then()
+            setSelectedEvents(JSON.parse(savedEvents));
+            console.log("RESTORE SELECTED")
+        }
+        const l = localStorage.getItem("icsURL");
+        if (l && l!=="") {
+            setIcsLink(JSON.parse(l));
+        }
+    }, []);
+
+
+    // Save selected events to localStorage
+    const saveSelectedEvents = () => {
+        localStorage.setItem("selectedEvents", JSON.stringify(selectedEvents));
+        localStorage.setItem("icsURL", JSON.stringify(icsLink));
+        toast({title:"Stored inside the Browser"});
+    };
+
     const handleLoadICS = async () => {
         try {
             const proxyURL = `${ICS_SERVICE}filtered-calendar.ics/?icsUrl=${await compressUrlParam(icsLink)}`;
@@ -57,6 +80,7 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
                     title,  // Titel mit Studiengruppe
                     start,
                     end,
+                    description: description,
                     allDay: isAllDay,
                 };
             });
@@ -93,13 +117,9 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
     };
 
     useEffect(() => {
-        console.log(selectedEvents); // Hier wird der aktualisierte Wert angezeigt
-
         const filteredEvents:CalendarEvent[] = calendarRawEvents.filter(event => selectedEvents.includes(event.title));
         setCalendarEvents(filteredEvents);
-
-        console.log(filteredEvents); // Hier wird die gefilterte Liste der Ereignisse angezeigt
-    }, [selectedEvents]);
+    }, [selectedEvents, calendarRawEvents]);
 
 // Gzip-Komprimierung und Linkgenerierung
     const handleGenerateFilterLink = async () => {
@@ -151,12 +171,19 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
                             events={events}
                             selectedEvents={selectedEvents}
                             setSelectedEvents={setSelectedEvents}
+                            toast={toast}
                         />
                     </div>
-
+                    <div className={"flex"}>
                     <Button onClick={handleGenerateFilterLink} className="w-full max-w-56 flex">
                         Generate Filter Link
                     </Button>
+
+                        <Button variant="outline" className={"ml-3"} onClick={saveSelectedEvents}>
+                            Save Selection
+                        </Button>
+
+                    </div>
 
                     <ICSLinkPopup filterLink={filterLink} isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} />
                 </div>

@@ -32,7 +32,7 @@ const EventFilterPage = () => {
     return (
         <div className="flex m-0 p-0 flex-col items-center justify-center bg-gray-100 w-screen min-h-screen">
             <LoadEvents states = {all_states}  toast={toast}/>
-            <MyCalendar calendarEvents = {calendarEvents} selectedEvents = { selectedEvents } ></MyCalendar>
+            <MyCalendar calendarEvents = {calendarEvents} selectedEvents = { selectedEvents } toast={toast}></MyCalendar>
         </div>
     );
 };

@@ -14,6 +14,7 @@ export default function MyCalendar(input:any){
 
     const calendarEvents = input.calendarEvents;
     const selEvents = input.selectedEvents;
+    const toast = input.toast;
     
     // Liste von bis zu 15 Farben, die zu ShadCN passen
     const shadcnColors = [
@@ -51,8 +52,14 @@ export default function MyCalendar(input:any){
       const colorClass = shadcnColors[eventIndex % shadcnColors.length];
     
       // Verwende die ShadCN-Klasse für die Hintergrundfarbe
-      console.log(colorClass)
       return  { style: { backgroundColor: colorClass } };
+    };
+
+    const handleEventClick = (event) => {
+        toast({
+            title: event.title,
+            description: event.description,
+        }) // Speichere das angeklickte Event
     };
     
 
@@ -67,12 +74,17 @@ export default function MyCalendar(input:any){
                         events={calendarEvents}
                         startAccessor="start"
                         endAccessor="end"
-                        style={{ height: 500 }}
+                        style={{ height: 750 }}
                         localizer={localizer}
                         eventPropGetter={(eventPropGetter)}
                         formats={{
                             timeGutterFormat: 'HH:mm', 
-                          }}/>
+                          }}
+                        min={new Date(2023, 0, 1, 6, 0, 0)} // Zeigt ab 6:00
+                        max={new Date(2023, 0, 1, 21, 0, 0)} // Zeigt bis 21:00
+                        onSelectEvent={handleEventClick}
+                    />
+
                 </div>
             </CardContent>
         </Card>
