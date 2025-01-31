@@ -15,6 +15,12 @@ export default function MyCalendar(input:any){
     const calendarEvents = input.calendarEvents;
     const selEvents = input.selectedEvents;
     const toast = input.toast;
+    const CustomEvent = ({ event }) => (
+        <div>
+            <strong>{event.title}</strong>
+            <div style={{ fontSize: "0.8em"}}>{event.room}</div>
+        </div>
+    );
     
     // Liste von bis zu 15 Farben, die zu ShadCN passen
     const shadcnColors = [
@@ -83,6 +89,9 @@ export default function MyCalendar(input:any){
                         min={new Date(2023, 0, 1, 6, 0, 0)} // Zeigt ab 6:00
                         max={new Date(2023, 0, 1, 21, 0, 0)} // Zeigt bis 21:00
                         onSelectEvent={handleEventClick}
+                        components={{
+                            event: CustomEvent, // Eigene Event-Darstellung
+                        }}
                     />
 
                 </div>

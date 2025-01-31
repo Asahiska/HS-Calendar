@@ -106,6 +106,11 @@ export async function filterICSV2(req, res) {
         //console.log(filteredEvents)
 
         const newComp = new ical.Component(["vcalendar", [], []]);
+        newComp.addPropertyWithValue('x-published-ttl', 'PT10M');
+        const refreshProp = new ical.Property('refresh-interval');
+        refreshProp.setParameter('VALUE', 'DURATION');
+        refreshProp.setValue('PT10M');
+        newComp.addProperty(refreshProp);
         filteredEvents.forEach(event => newComp.addSubcomponent(event));
         const newICSData = newComp.toString();
 

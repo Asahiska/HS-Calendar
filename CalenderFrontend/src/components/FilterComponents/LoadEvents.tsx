@@ -4,6 +4,7 @@ import {Button} from "@/components/ui/button.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import axios from "axios";
 import ical from "ical.js";
+import { ArrowDown, ArrowUp } from "lucide-react"
 import {useEffect, useState} from "react";
 import {compressUrlParam} from "@/components/Functions/urlBuilder.tsx";
 import {CalendarEvent} from "@/components/EventFilterPage.tsx";
@@ -26,6 +27,7 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
 
     const [calendarRawEvents, setCalendarRawEvents] = useState<CalendarEvent[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState(false)
+    const [isVisible, setIsVisible] = useState(true)
 
 
     // Load saved events from localStorage on initial render
@@ -34,6 +36,7 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
         if (savedEvents) {
             handleLoadICS().then()
             setSelectedEvents(JSON.parse(savedEvents));
+            setIsVisible(false)
             console.log("RESTORE SELECTED")
         }
         const l = localStorage.getItem("icsURL");
@@ -72,6 +75,9 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
                 // Extrahiere die Studiengruppe aus der DESCRIPTION
                 const studyGroupMatch = description.match(/Studiengruppe:\s*([^\n]+)/);
                 const studyGroup = studyGroupMatch ? studyGroupMatch[1] : '';
+                // Extrahiere die Studiengruppe aus der DESCRIPTION
+                const roomGroupMatch = description.match(/Raum:\s*([^\n]+)/);
+                const roomGroup = roomGroupMatch ? roomGroupMatch[1] : '';
 
                 // Füge die Studiengruppe am Ende des Titels hinzu
                 const title = studyGroup ? `${summary} (${studyGroup})` : summary;
@@ -81,6 +87,7 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
                     start,
                     end,
                     description: description,
+                    room:roomGroup,
                     allDay: isAllDay,
                 };
             });
@@ -146,48 +153,55 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
         setIsPopupOpen(true)
     };
 
-    return(
-        <Card className="p-6 shadow-lg rounded-lg m-6 w-full lg:w-3/4">
-            <CardHeader>
-                <CardTitle>Filter ICS Events</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    <div className="flex space-x-2">
-                        <Input
-                            type="text"
-                            placeholder="Enter ICS file link"
-                            value={icsLink}
-                            onChange={(e) => setIcsLink(e.target.value)}
-                        />
-                        <Button onClick={handleLoadICS}>Load Events</Button>
-                    </div>
+    return (
+        <>
+            <div className={"flex flex-row justify-start rounded-lg mt-6 w-full lg:w-3/4"}>
+            <Button className={"w-56 mt-5"} onClick={() => setIsVisible(!isVisible)}> {isVisible ? <ArrowUp/>: <ArrowDown/>} {isVisible ? "Hide Filter-Options" : "Show Filter-Options"}</Button>
+            </div>
+            {isVisible && (
+                <Card className="p-6 shadow-lg rounded-lg m-6 w-full lg:w-3/4">
+                    <CardHeader>
+                        <CardTitle>Filter ICS Events</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <div className="flex space-x-2">
+                                <Input
+                                    type="text"
+                                    placeholder="Enter ICS file link"
+                                    value={icsLink}
+                                    onChange={(e) => setIcsLink(e.target.value)}
+                                />
+                                <Button onClick={handleLoadICS}>Load Events</Button>
+                            </div>
 
-                    <Separator />
+                            <Separator />
 
-                    <div>
-                        <h2 className="text-lg font-semibold mb-2">Select Events to Keep</h2>
-                        <EventSelector
-                            events={events}
-                            selectedEvents={selectedEvents}
-                            setSelectedEvents={setSelectedEvents}
-                        />
-                    </div>
-                    <div className={"flex"}>
-                    <Button onClick={handleGenerateFilterLink} className="w-full max-w-56 flex">
-                        Generate Filter Link
-                    </Button>
+                            <div>
+                                <h2 className="text-lg font-semibold mb-2">Select Events to Keep</h2>
+                                <EventSelector
+                                    events={events}
+                                    selectedEvents={selectedEvents}
+                                    setSelectedEvents={setSelectedEvents}
+                                />
+                            </div>
+                            <div className={"flex"}>
+                            <Button onClick={handleGenerateFilterLink} className="w-full max-w-56 flex">
+                                Generate Filter Link
+                            </Button>
 
-                        <Button variant="outline" className={"ml-3"} onClick={saveSelectedEvents}>
-                            Save Selection
-                        </Button>
+                                <Button variant="outline" className={"ml-3"} onClick={saveSelectedEvents}>
+                                    Save Selection
+                                </Button>
 
-                    </div>
+                            </div>
 
-                    <ICSLinkPopup filterLink={filterLink} isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} />
-                </div>
-            </CardContent>
-        </Card>
-    )
+                            <ICSLinkPopup filterLink={filterLink} isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} />
+                        </div>
+                    </CardContent>
+                </Card>
+                )}
+        </>
+)
 }
 
