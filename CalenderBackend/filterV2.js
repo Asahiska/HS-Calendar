@@ -100,7 +100,7 @@ export async function filterICSV2(req, res) {
                 // Update the summary with the current index and total count
                 const newSummary = `${summary} (${currentIndex}/${totalCount})`;
                 event.updatePropertyWithValue("summary", newSummary);
-                const newDescription = `${description || ""} \n\n Letzter Sync: ${new Date(last_sync).toLocaleString('de-DE')}`;
+                const newDescription = `${description || ""} \n\n Letzter Sync: ${new Date(last_sync).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}`;
                 event.updatePropertyWithValue("description", newDescription)
 
                 return true;

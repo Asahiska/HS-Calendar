@@ -73,8 +73,8 @@ export async function filterICSV1( req, res){
 
                 // Füge die Studiengruppe am Ende des Titels hinzu
                 const title = studyGroup ? `${summary} (${studyGroup})` : summary;
-                const newDescription = `${description || ""} \n\n Letzter Sync: ${new Date(last_sync).toLocaleString('de-DE')}`;
-                event.updatePropertyWithValue("description", newDesctiption)
+                const newDescription = `${description || ""} \n\n Letzter Sync: ${new Date(last_sync).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}`;
+                event.updatePropertyWithValue("description", newDescription)
 
                 return filterData['events'].includes(title);
             })
