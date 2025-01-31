@@ -52,6 +52,8 @@ export async function filterICSV2(req, res) {
                 lastDownload: currentTime
             };
         }
+
+        const last_sync = cache[filename].lastDownload
         //console.log("ROW ICS DATA")
         //console.log(icsData)
 
@@ -98,6 +100,9 @@ export async function filterICSV2(req, res) {
                 // Update the summary with the current index and total count
                 const newSummary = `${summary} (${currentIndex}/${totalCount})`;
                 event.updatePropertyWithValue("summary", newSummary);
+                const newDescription = `${description || ""} \n\n Letzter Sync: ${new Date(last_sync).toLocaleString('de-DE')}`;
+                event.updatePropertyWithValue("description", newDescription)
+
                 return true;
             }
             return !filterData["events"]; // If no filter is present, include all events

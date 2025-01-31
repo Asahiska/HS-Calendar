@@ -13,7 +13,7 @@ interface ICSLinkPopupProps {
 
 export function ICSLinkPopup({ filterLink, isOpen, onClose }: ICSLinkPopupProps) {
     const [isCopied, setIsCopied] = useState(false);
-    const [experimentalAPI, setExperimentalAPI] = useState(false);
+    const [experimentalAPI, setExperimentalAPI] = useState(true);
     const [link, setLink] = useState(filterLink)
 
     const handleCopy = () => {
