@@ -9,15 +9,16 @@ app.use(cors())
 app.get('/filtered-calendar.ics', async (req, res) => {
     const {version} = req.query;
 
-    if(version === "2"){
-        res = await filterICSV2(req, res)
-        //res = await filterICSV2(req, res)
-    }else{
+    //API V2 IS NO LONGER EXPERIMENTAL --> Use V2 For all Requests
+    if(version === "1"){
         res = await filterICSV1(req, res)
+        //res = await filterICSV2(req, res)
+    }else if(version === "2") {
+        res = await filterICSV2(req, res)
+    }else{
+        res = await filterICSV2(req, res)
     }
     return res
-
-
 });
 
 

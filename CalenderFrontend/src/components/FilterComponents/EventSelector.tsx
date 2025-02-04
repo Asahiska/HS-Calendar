@@ -1,13 +1,10 @@
-"use client"
-
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import {Search} from "lucide-react";
 import { Button } from "../ui/button"
-
-export default function EventSelector({ events, selectedEvents, setSelectedEvents }) {
+export default function EventSelector({ events, selectedEvents, setSelectedEvents }:{events:[string], selectedEvents:[string], setSelectedEvents: any}) {
     const [searchQuery, setSearchQuery] = useState("")
 
     const handleCheckboxChange = (eventName: string) => {

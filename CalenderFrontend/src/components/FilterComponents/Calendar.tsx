@@ -15,7 +15,7 @@ export default function MyCalendar(input:any){
     const calendarEvents = input.calendarEvents;
     const selEvents = input.selectedEvents;
     const toast = input.toast;
-    const CustomEvent = ({ event }) => (
+    const CustomEvent = ({ event }:{event:any}) => (
         <div>
             <strong>{event.title}</strong>
             <div style={{ fontSize: "0.8em"}}>{event.room}</div>
@@ -61,7 +61,7 @@ export default function MyCalendar(input:any){
       return  { style: { backgroundColor: colorClass } };
     };
 
-    const handleEventClick = (event) => {
+    const handleEventClick = (event:any) => {
         toast({
             title: event.title,
             description: event.description,
