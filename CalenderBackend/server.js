@@ -5,6 +5,8 @@ import {filterICSV2} from "./filterV2.js"; // Beachte das `.js`-Suffix bei Impor
 
 const app = express();
 
+
+
 app.use(cors())
 app.get('/filtered-calendar.ics', async (req, res) => {
     const {version} = req.query;
