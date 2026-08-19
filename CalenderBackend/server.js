@@ -1,7 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
 import {filterICSV1} from './filterV1.js';
 import {filterICSV2} from "./filterV2.js"; // Beachte das `.js`-Suffix bei Imports!
+
+fs.mkdirSync('./data', { recursive: true });
 
 const app = express();
 
