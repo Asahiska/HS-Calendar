@@ -55,7 +55,7 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
 
     const handleLoadICS = async () => {
         try {
-            const proxyURL = `${ICS_SERVICE}filtered-calendar.ics/?icsUrl=${await compressUrlParam(icsLink)}`;
+            const proxyURL = `${ICS_SERVICE}filtered-calendar.ics/?icsUrl=${encodeURIComponent(await compressUrlParam(icsLink))}`;
             const response = await axios.get(proxyURL);
             const icsData = response.data;
 
