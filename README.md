@@ -4,9 +4,6 @@
 
 Filter ICS files effectively with ease!
 
-[![GitHub last commit](https://img.shields.io/github/last-commit/fwallmeier/HsOsnabrueckFilterICS)](https://github.com/fwallmeier/HsOsnabrueckFilterICS/commits/main)
-[![GitHub issues](https://img.shields.io/github/issues-raw/fwallmeier/HsOsnabrueckFilterICS)](https://github.com/fwallmeier/HsOsnabrueckFilterICS/issues)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/fwallmeier/HsOsnabrueckFilterICS)](https://github.com/fwallmeier/HsOsnabrueckFilterICS/pulls)
 
 [Usage](#usage)  • [Run Locally](#run-the-project-locally) • [Development](#development) • [Contributing](#contributing) • [License](#license)
 
@@ -21,7 +18,7 @@ Filter ICS files effectively with ease!
 
 ## Usage
 
-Access the tool at [https://fwallmeier.github.io/HsOsnabrueckFilterICS/](https://fwallmeier.github.io/HsOsnabrueckFilterICS/).
+Access the tool at https://asahiska.github.io/HS-Calendar
 
 ### Steps to Filter ICS Files
 
@@ -47,7 +44,7 @@ To set up and run the project locally, follow these steps:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/fwallmeier/HsOsnabrueckFilterICS.git
+ 
    ```
 
 2. Install dependencies:
@@ -81,7 +78,6 @@ This project is open for contributions and improvements. Developers can:
 
 - Fork the repository
 - Submit bug fixes or enhancements via pull requests
-- Add new features as per the [issues list](https://github.com/fwallmeier/HsOsnabrueckFilterICS/issues)
 
 ### Commit Guidelines
 
