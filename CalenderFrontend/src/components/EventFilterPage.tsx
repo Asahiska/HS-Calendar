@@ -12,29 +12,21 @@ export type CalendarEvent = {
     allDay: boolean;
 };
 
-// Course codes lead with a 2-digit year (e.g. "24BTS-EAT"). Force the chosen
-// Year onto every code, same as semester is appended onto every code, so
-// setting Year after picking courses always wins rather than being ignored.
-function applyYearOverride(code: string, year: string): string {
-    const y = year.trim();
-    if (!y || !/^\d{2}/.test(code)) return code;
-    const twoDigit = y.length >= 4 ? y.slice(-2) : y.padStart(2, "0");
-    return twoDigit + code.slice(2);
-}
-
 // Rebuilds the ICS links selected on the previous page from the URL itself
-// (?courses=code1,code2&sem=5&year=23), so a bookmarked/shared link
-// reproduces the same calendar without depending on router navigation state.
+// (?courses=code1,code2&sem=5), so a bookmarked/shared link reproduces the
+// same calendar without depending on router navigation state. Codes are used
+// as-is (not rewritten by Year) — course codes only exist for specific years,
+// so forcing an arbitrary year onto one can produce a combination that was
+// never a real schedule to begin with. Year is enforced earlier, in the
+// course selector, instead.
 function icsLinksFromSearchParams(searchParams: URLSearchParams): string[] {
     const courses = searchParams.get("courses");
     if (!courses) return [];
     const sem = searchParams.get("sem")?.trim();
-    const year = searchParams.get("year") ?? "";
     return courses
         .split(",")
         .map((code) => code.trim())
         .filter(Boolean)
-        .map((code) => applyYearOverride(code, year))
         .map((code) => `${SKED_BASE}${code}${sem ? `-${sem}` : ""}.ics`);
 }
 
