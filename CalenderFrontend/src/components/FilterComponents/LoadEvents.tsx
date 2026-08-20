@@ -1,5 +1,4 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
-import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import axios from "axios";
@@ -16,7 +15,7 @@ const ICS_SERVICE = import.meta.env.VITE_ICS_SERVICE_URL
 export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
 
     const {
-        icsLink, setIcsLink,
+        icsLinks,
         events, setEvents,
         selectedEvents, setSelectedEvents,
         filterLink, setFilterLink,
@@ -29,19 +28,17 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
     const [isPopupOpen, setIsPopupOpen] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
 
-
-    // Load saved events from localStorage on initial render
+    // The courses selected on the previous page arrive as ICS links already
+    // (encoded in the URL), so load them right away instead of waiting for
+    // a manual "Add Link" step.
     useEffect(() => {
+        if (icsLinks.length > 0) {
+            handleLoadICS().then()
+        }
         const savedEvents = localStorage.getItem("selectedEvents");
         if (savedEvents) {
-            handleLoadICS().then()
             setSelectedEvents(JSON.parse(savedEvents));
             setIsVisible(false)
-            console.log("RESTORE SELECTED")
-        }
-        const l = localStorage.getItem("icsURL");
-        if (l && l!=="") {
-            setIcsLink(JSON.parse(l));
         }
     }, []);
 
@@ -49,13 +46,12 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
     // Save selected events to localStorage
     const saveSelectedEvents = () => {
         localStorage.setItem("selectedEvents", JSON.stringify(selectedEvents));
-        localStorage.setItem("icsURL", JSON.stringify(icsLink));
         toast({title:"Stored inside the Browser"});
     };
 
     const handleLoadICS = async () => {
         try {
-            const proxyURL = `${ICS_SERVICE}filtered-calendar.ics/?icsUrl=${encodeURIComponent(await compressUrlParam(icsLink))}`;
+            const proxyURL = `${ICS_SERVICE}filtered-calendar.ics/?icsUrl=${encodeURIComponent(await compressUrlParam(JSON.stringify(icsLinks)))}`;
             const response = await axios.get(proxyURL);
             const icsData = response.data;
 
@@ -141,7 +137,7 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
         const compressedPayload = await compressUrlParam(jsonPayload, 'gzip');
 
         // Komprimieren des ICS-Links
-        const compressedIcsLink = await compressUrlParam(icsLink, 'gzip');
+        const compressedIcsLink = await compressUrlParam(JSON.stringify(icsLinks), 'gzip');
 
         // Erstellen des neuen Filter-Links
         const newFilterLink = `${ICS_SERVICE}filtered-calendar.ics/?filter=${encodeURIComponent(compressedPayload)}&icsUrl=${encodeURIComponent(compressedIcsLink)}`;
@@ -155,30 +151,24 @@ export default function LoadEvents ({states , toast}: {states:any, toast:any}) {
 
     return (
         <>
-            <div className={"flex flex-row justify-start rounded-lg mt-6 w-full lg:w-3/4"}>
-            <Button className={"w-56 mt-5"} onClick={() => setIsVisible(!isVisible)}> {isVisible ? <ArrowUp/>: <ArrowDown/>} {isVisible ? "Hide Filter-Options" : "Show Filter-Options"}</Button>
+            <div className={"flex flex-row justify-start rounded-lg mt-6 px-6 w-full lg:w-3/4"}>
+            <Button className={"w-56"} onClick={() => setIsVisible(!isVisible)}> {isVisible ? <ArrowUp/>: <ArrowDown/>} {isVisible ? "Hide Filter-Options" : "Show Filter-Options"}</Button>
             </div>
             {isVisible && (
-                <Card className="p-6 shadow-lg rounded-lg m-6 w-full lg:w-3/4">
+                <Card className="p-6 rounded-lg m-6 w-full lg:w-3/4 bg-transparent border-none shadow-none">
                     <CardHeader>
-                        <CardTitle>Filter ICS Events</CardTitle>
+                        <CardTitle className="text-white">Filter ICS Events</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <div className="flex space-x-2">
-                                <Input
-                                    type="text"
-                                    placeholder="Enter ICS file link"
-                                    value={icsLink}
-                                    onChange={(e) => setIcsLink(e.target.value)}
-                                />
-                                <Button onClick={handleLoadICS}>Load Events</Button>
+                            <div className="flex">
+                                <Button onClick={handleLoadICS}>Reload Events</Button>
                             </div>
 
-                            <Separator />
+                            <Separator className="bg-white/20" />
 
                             <div>
-                                <h2 className="text-lg font-semibold mb-2">Select Events to Keep</h2>
+                                <h2 className="text-lg font-semibold mb-2 text-white">Select Events to Keep</h2>
                                 <EventSelector
                                     events={events}
                                     selectedEvents={selectedEvents}
