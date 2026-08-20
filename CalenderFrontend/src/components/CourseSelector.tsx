@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { PROGRAM_OPTIONS } from "@/components/Functions/programData";
+import { useToast } from "@/hooks/use-toast";
 
 function parseYear(value: string): number | null {
     const y = value.trim();
@@ -35,6 +36,7 @@ function highlightMatch(text: string, query: string) {
 
 function CourseSelector() {
     const navigate = useNavigate();
+    const { toast } = useToast();
 
     const [query, setQuery] = useState("");
     const [yearFilter, setYearFilter] = useState("");
@@ -62,6 +64,29 @@ function CourseSelector() {
             .filter((o) => yearNum === null || o.year === yearNum)
             .slice(0, 8);
     }, [textMatches, yearFilter]);
+
+    // Course codes only exist for specific years — forcing an arbitrary year
+    // onto a selected course's code can produce a combination that was never
+    // a real schedule. So instead of overriding the year at link time, keep
+    // the selection itself always valid: whenever Year changes, drop any
+    // already-selected course that no longer matches it.
+    useEffect(() => {
+        const yearNum = parseYear(yearFilter);
+        if (yearNum === null) return;
+        setSelectedCourses((prev) => {
+            const mismatched = prev.filter((c) => {
+                const opt = PROGRAM_OPTIONS.find((o) => o.code === c.code);
+                return opt && opt.year !== yearNum;
+            });
+            if (mismatched.length === 0) return prev;
+            toast({
+                variant: "destructive",
+                title: "Removed course(s) for a different year",
+                description: mismatched.map((c) => c.label).join(", "),
+            });
+            return prev.filter((c) => !mismatched.includes(c));
+        });
+    }, [yearFilter]);
 
     const addCourse = (course: SelectedCourse) => {
         setSelectedCourses((prev) =>
@@ -92,11 +117,20 @@ function CourseSelector() {
             if (suggestions.length > 0) {
                 const chosen = suggestions[Math.min(highlightedIndex, suggestions.length - 1)];
                 addCourse({ code: chosen.code, label: chosen.label });
-            } else if (query.trim() && textMatches.length === 0) {
-                // Only accept raw typed text as a manual code when it matches no known
-                // program at all — if it exists but was excluded by the Year filter,
-                // silently adding it would add the wrong year's course.
-                addCourse({ code: query.trim(), label: query.trim() });
+            } else if (query.trim() && textMatches.length > 0) {
+                // It exists, just not for the currently selected Year — adding it
+                // anyway would silently produce the wrong year's course.
+                toast({
+                    variant: "destructive",
+                    title: "Not offered in that year",
+                    description: `"${query.trim()}" exists, but not for the year you've set. Try a different year or clear the year field.`,
+                });
+            } else if (query.trim()) {
+                toast({
+                    variant: "destructive",
+                    title: "No matching course",
+                    description: `"${query.trim()}" doesn't match any known course. Check the spelling or try a different search term.`,
+                });
             }
         } else if (e.key === "Escape") {
             setShowSuggestions(false);
@@ -105,11 +139,7 @@ function CourseSelector() {
 
     const handleContinue = () => {
         const codes = selectedCourses.map((c) => c.code).join(",");
-        const params = new URLSearchParams({
-            courses: codes,
-            sem: semester.trim(),
-            year: yearFilter.trim(),
-        });
+        const params = new URLSearchParams({ courses: codes, sem: semester.trim() });
         navigate(`/filter?${params.toString()}`);
     };
 
