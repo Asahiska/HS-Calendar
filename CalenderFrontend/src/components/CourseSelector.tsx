@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,20 +18,59 @@ type SelectedCourse = {
     label: string;
 };
 
+function queryWords(query: string): string[] {
+    return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+// Every typed word just needs to appear somewhere in the text — not as one
+// contiguous phrase. Without this, an English query like "information
+// management" would never match a German compound label like
+// "Informationsmanagement" (one word, no space).
+function matchesAllWords(text: string, words: string[]): boolean {
+    const lower = text.toLowerCase();
+    return words.every((w) => lower.includes(w));
+}
+
 function highlightMatch(text: string, query: string) {
-    const q = query.trim();
-    if (!q) return text;
-    const idx = text.toLowerCase().indexOf(q.toLowerCase());
-    if (idx === -1) return text;
-    return (
-        <>
-            {text.slice(0, idx)}
-            <span className="rounded-sm bg-[#736CED] text-white">
-                {text.slice(idx, idx + q.length)}
+    const words = queryWords(query);
+    if (words.length === 0) return text;
+
+    const lower = text.toLowerCase();
+    const ranges: [number, number][] = [];
+    for (const w of words) {
+        let from = 0;
+        let idx;
+        while ((idx = lower.indexOf(w, from)) !== -1) {
+            ranges.push([idx, idx + w.length]);
+            from = idx + w.length;
+        }
+    }
+    if (ranges.length === 0) return text;
+
+    ranges.sort((a, b) => a[0] - b[0]);
+    const merged: [number, number][] = [];
+    for (const range of ranges) {
+        const last = merged[merged.length - 1];
+        if (last && range[0] <= last[1]) {
+            last[1] = Math.max(last[1], range[1]);
+        } else {
+            merged.push(range);
+        }
+    }
+
+    const nodes: ReactNode[] = [];
+    let cursor = 0;
+    merged.forEach(([start, end], i) => {
+        if (start > cursor) nodes.push(text.slice(cursor, start));
+        nodes.push(
+            <span key={i} className="rounded-sm bg-[#736CED] text-white">
+                {text.slice(start, end)}
             </span>
-            {text.slice(idx + q.length)}
-        </>
-    );
+        );
+        cursor = end;
+    });
+    if (cursor < text.length) nodes.push(text.slice(cursor));
+    return <>{nodes}</>;
 }
 
 function CourseSelector() {
@@ -49,11 +88,11 @@ function CourseSelector() {
     // Matches by text alone, ignoring the Year filter — used to tell "genuinely
     // no such course" apart from "exists, just not for that year" below.
     const textMatches = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        if (!q) return [];
+        const words = queryWords(query);
+        if (words.length === 0) return [];
         return PROGRAM_OPTIONS.filter(
             (o) =>
-                (o.label.toLowerCase().includes(q) || o.code.toLowerCase().includes(q)) &&
+                matchesAllWords(`${o.label} ${o.code}`, words) &&
                 !selectedCourses.some((s) => s.code === o.code)
         );
     }, [query, selectedCourses]);
