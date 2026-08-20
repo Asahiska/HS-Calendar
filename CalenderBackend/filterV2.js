@@ -9,6 +9,42 @@ const cache = {}; // Cache für ICS-Daten
 const CACHE_DURATION = 10* 60 * 1000; // 24 Stunden
 const STORAGE_PATH = "./data"; // Pfad zum Speichern der ICS-Datei (Docker-Volume)
 
+// Erlaubt entweder eine einzelne ICS-URL (Legacy) oder ein JSON-Array mehrerer URLs
+function parseIcsUrls(icsUrl) {
+    try {
+        const parsed = JSON.parse(icsUrl);
+        if (Array.isArray(parsed)) {
+            return parsed.filter(Boolean);
+        }
+    } catch {
+        // Kein JSON -> als einzelne URL behandeln
+    }
+    return [icsUrl];
+}
+
+async function loadIcsDataForUrl(icsUrl, currentTime) {
+    const filename = crypto.createHash("md5").update(icsUrl).digest("hex") + ".ics";
+    const filepath = path.join(STORAGE_PATH, filename);
+
+    if (filename in cache) {
+        const fileAge = currentTime - cache[filename].lastDownload;
+
+        if (fileAge < CACHE_DURATION) {
+            return cache[filename];
+        }
+        console.log("Stored ICS file is outdated. Downloading new file...");
+    } else {
+        console.log("No stored ICS file found. Downloading new file...");
+    }
+
+    const icsData = await downloadAndUpdateICS(icsUrl, filepath);
+    cache[filename] = {
+        icsData: icsData,
+        lastDownload: currentTime
+    };
+    return cache[filename];
+}
+
 export async function filterICSV2(req, res) {
     let { icsUrl, filter } = req.query;
 
@@ -23,45 +59,51 @@ export async function filterICSV2(req, res) {
         return;
     }
 
-    const filename = crypto.createHash("md5").update(icsUrl).digest("hex") + ".ics";
-    const filepath = path.join(STORAGE_PATH, filename);
+    const icsUrls = parseIcsUrls(icsUrl);
+    if (icsUrls.length === 0) {
+        console.error("Invalid Args");
+        res.status(500).send("Invalid URL-Args. No ICS-URLs provided.");
+        return;
+    }
+
     const currentTime = Date.now();
 
-    let icsData;
-
     try {
-        // Überprüfen, ob die gespeicherte Datei existiert und aktuell ist
-        if (filename in cache) {
-            const fileAge = currentTime - cache[filename].lastDownload;
+        // Lade (und cache) die ICS-Daten für jede angegebene Quelle einzeln
+        const loadedSources = await Promise.all(
+            icsUrls.map((url) => loadIcsDataForUrl(url, currentTime))
+        );
 
-            if (fileAge < CACHE_DURATION) {
-                icsData = cache[filename].icsData
-            } else {
-                console.log("Stored ICS file is outdated. Downloading new file...");
-                icsData = await downloadAndUpdateICS(icsUrl, filepath);
-                cache[filename] = {
-                    icsData: icsData,
-                    lastDownload: currentTime
-                };
+        const last_sync = Math.max(...loadedSources.map((s) => s.lastDownload));
+
+        // Events aus allen Quellen zusammenführen
+        const mergedEvents = loadedSources.flatMap((source) => {
+            const jcalData = ical.parse(source.icsData);
+            const comp = new ical.Component(jcalData);
+            return comp.getAllSubcomponents("vevent");
+        });
+
+        // Ein Kurs kann in mehreren Quellen auftauchen, wenn er mehreren
+        // Studiengruppen zugeordnet ist. Dedupliziere per UID (Fallback:
+        // Summary + Start + Ende), damit er nicht doppelt angezeigt wird.
+        const seenEventKeys = new Set();
+        const events = mergedEvents.filter((event) => {
+            const uid = event.getFirstPropertyValue("uid");
+            const key = uid
+                ? `uid:${uid}`
+                : [
+                      "fallback",
+                      event.getFirstPropertyValue("summary"),
+                      event.getFirstPropertyValue("dtstart"),
+                      event.getFirstPropertyValue("dtend"),
+                  ].join("|");
+
+            if (seenEventKeys.has(key)) {
+                return false;
             }
-        } else {
-            console.log("No stored ICS file found. Downloading new file...");
-            icsData = await downloadAndUpdateICS(icsUrl, filepath);
-            cache[filename] = {
-                icsData: icsData,
-                lastDownload: currentTime
-            };
-        }
-
-        const last_sync = cache[filename].lastDownload
-        //console.log("ROW ICS DATA")
-        //console.log(icsData)
-
-        // ICS-Daten parsen und filtern
-        // Parse the ICS data and extract events
-        const jcalData = ical.parse(icsData);
-        const comp = new ical.Component(jcalData);
-        const events = comp.getAllSubcomponents("vevent");
+            seenEventKeys.add(key);
+            return true;
+        });
 
         let filterData = {};
         if (filter) {
